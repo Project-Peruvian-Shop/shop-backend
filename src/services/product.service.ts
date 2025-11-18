@@ -90,7 +90,6 @@ export const getProductByIdService = async (
 
   const product = data as unknown as ProductoDB;
 
-  console.log(data);
   return {
     id: product.id,
     nombre: product.nombre,
