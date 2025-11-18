@@ -1,6 +1,22 @@
 import { PaginatedResponse } from "../types/global.type";
-import { Producto } from "../types/product.type";
+import { Producto, ProductoPaginated } from "../types/product.type";
 import { supabase } from "../utils/supabaseClient";
+
+type Imagen = { id: number; enlace: string; alt: string };
+type Categoria = {
+  id: number;
+  nombre: string;
+  usos: string;
+  norma: string;
+  imagen: Imagen;
+};
+type ProductoDB = {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  imagen: Imagen;
+  categoria: Categoria;
+};
 
 export const getProductService = async (
   page: number = 0,
@@ -47,18 +63,46 @@ export const getProductService = async (
   return paginated;
 };
 
-export const getProductByIdService = async (id: number): Promise<Producto> => {
+export const getProductByIdService = async (
+  id: number
+): Promise<ProductoPaginated> => {
   const { data, error } = await supabase
     .from("producto")
-    .select("*")
+    .select(
+      `
+    id,
+    nombre,
+    descripcion,
+    imagen:imagen_id ( id, enlace, alt ),
+    categoria:categoria_id (
+      id,
+      nombre,
+      usos,
+      norma,
+      imagen:imagen_id ( id, enlace, alt )
+    )
+  `
+    )
     .eq("id", id)
     .single();
 
-  if (error) {
-    throw new Error("DB: " + error.message);
-  }
+  if (error) throw new Error("DB: " + error.message);
 
-  return data as Producto;
+  const product = data as unknown as ProductoDB;
+
+  console.log(data);
+  return {
+    id: product.id,
+    nombre: product.nombre,
+    descripcion: product.descripcion,
+    productoEnlace: product.imagen.enlace,
+    productoAlt: product.imagen.alt,
+    categoriaId: product.categoria.id,
+    categoriaNombre: product.categoria.nombre,
+    categoriaEnlace: product.categoria.imagen.enlace,
+    categoriaAlt: product.categoria.imagen.alt,
+    categoriaUsos: product.categoria.usos,
+  };
 };
 
 export const getProductSuggestedService = async (
