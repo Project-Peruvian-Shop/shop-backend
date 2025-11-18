@@ -18,3 +18,11 @@ export interface ProductoPaginated {
   categoriaAlt: string;
   categoriaUsos: string;
 }
+
+export interface PaginatedProductoResponseDTO {
+  id: number;
+  nombre: string;
+  imagenUrl: string;
+  imagenAlt: string;
+  categoriaNombre: string;
+}

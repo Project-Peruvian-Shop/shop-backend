@@ -1,5 +1,5 @@
 import { PaginatedResponse } from "../types/global.type";
-import { Producto, ProductoPaginated } from "../types/product.type";
+import { PaginatedProductoResponseDTO, Producto, ProductoPaginated } from "../types/product.type";
 import { supabase } from "../utils/supabaseClient";
 
 type Imagen = { id: number; enlace: string; alt: string };
@@ -22,26 +22,28 @@ export const getProductService = async (
   page: number = 0,
   size: number = 10,
   categoria: number = 1
-): Promise<PaginatedResponse<Producto>> => {
+): Promise<PaginatedResponse<PaginatedProductoResponseDTO>> => {
   const from = page * size;
   const to = from + size - 1;
 
-  let data;
-  let error;
-  let count;
+  let query = supabase
+    .from("producto")
+    .select(
+      `
+        id,
+        nombre,
+        imagen:imagen_id ( id, enlace, alt ),
+        categoria:categoria_id ( id, nombre )
+      `,
+      { count: "exact" }
+    )
+    .range(from, to);
 
-  if (categoria === -1) {
-    ({ data, error, count } = await supabase
-      .from("producto")
-      .select("*", { count: "exact" })
-      .range(from, to));
-  } else {
-    ({ data, error, count } = await supabase
-      .from("producto")
-      .select("*", { count: "exact" })
-      .eq("categoria_id", categoria)
-      .range(from, to));
+  if (categoria !== -1) {
+    query = query.eq("categoria_id", categoria);
   }
+
+  const { data, error, count } = await query;
 
   if (error) {
     throw new Error("DB: " + error.message);
@@ -50,8 +52,26 @@ export const getProductService = async (
   const totalElements = count ?? 0;
   const totalPages = Math.ceil(totalElements / size);
 
-  const paginated: PaginatedResponse<Producto> = {
-    content: data ?? [],
+  // Normalización por si Supabase devuelve array u objeto
+  const toOne = <T>(value: T | T[]): T =>
+    Array.isArray(value) ? value[0] : value;
+
+  const content: PaginatedProductoResponseDTO[] =
+    (data ?? []).map((prod: any) => {
+      const imagen = toOne(prod.imagen);
+      const categoria = toOne(prod.categoria);
+
+      return {
+        id: prod.id,
+        nombre: prod.nombre,
+        imagenUrl: imagen?.enlace ?? "",
+        imagenAlt: imagen?.alt ?? "",
+        categoriaNombre: categoria?.nombre ?? "",
+      };
+    });
+
+  return {
+    content,
     totalPages,
     totalElements,
     number: page,
@@ -59,9 +79,8 @@ export const getProductService = async (
     first: page === 0,
     last: page === totalPages - 1,
   };
-
-  return paginated;
 };
+
 
 export const getProductByIdService = async (
   id: number
