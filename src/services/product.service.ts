@@ -1,13 +1,13 @@
-import { GlobalResponse, PaginatedResponse } from "../types/global.type";
+import { PaginatedResponse } from "../types/global.type";
 import { Producto } from "../types/product.type";
 import { supabase } from "../utils/supabaseClient";
 
 export const getProductService = async (
-  page: number = 1,
-  limit: number = 10
-): Promise<GlobalResponse<PaginatedResponse<Producto>>> => {
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  page: number = 0,
+  size: number = 10
+): Promise<PaginatedResponse<Producto>> => {
+  const from = page * size;
+  const to = from + size - 1;
 
   const { data, error, count } = await supabase
     .from("producto")
@@ -18,25 +18,32 @@ export const getProductService = async (
     throw new Error("DB: " + error.message);
   }
 
-  // construir la paginación
   const totalElements = count ?? 0;
-  const totalPages = Math.ceil(totalElements / limit);
+  const totalPages = Math.ceil(totalElements / size);
 
   const paginated: PaginatedResponse<Producto> = {
     content: data ?? [],
     totalPages,
     totalElements,
     number: page,
-    size: limit,
-    first: page === 1,
-    last: page === totalPages,
+    size: size,
+    first: page === 0,
+    last: page === totalPages - 1,
   };
 
-  return {
-    ok: true,
-    message: "Productos obtenidos",
-    data: paginated,
-    timestamp: new Date().toISOString(),
-    details: null,
-  };
+  return paginated;
+};
+
+export const getProductByIdService = async (id: number): Promise<Producto> => {
+  const { data, error } = await supabase
+    .from("producto")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    throw new Error("DB: " + error.message);
+  }
+
+  return data as Producto;
 };
