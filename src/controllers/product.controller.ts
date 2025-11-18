@@ -9,8 +9,9 @@ export const getProductController = async (req: Request, res: Response) => {
   try {
     const page = Number(req.query.page) || 0;
     const size = Number(req.query.size) || 10;
+    const categoria = Number(req.query.categoria) || -1;
 
-    const products = await getProductService(page, size);
+    const products = await getProductService(page, size, categoria);
 
     res.status(200).json({
       ok: true,

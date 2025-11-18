@@ -4,15 +4,28 @@ import { supabase } from "../utils/supabaseClient";
 
 export const getProductService = async (
   page: number = 0,
-  size: number = 10
+  size: number = 10,
+  categoria: number = 1
 ): Promise<PaginatedResponse<Producto>> => {
   const from = page * size;
   const to = from + size - 1;
 
-  const { data, error, count } = await supabase
-    .from("producto")
-    .select("*", { count: "exact" })
-    .range(from, to);
+  let data;
+  let error;
+  let count;
+
+  if (categoria === -1) {
+    ({ data, error, count } = await supabase
+      .from("producto")
+      .select("*", { count: "exact" })
+      .range(from, to));
+  } else {
+    ({ data, error, count } = await supabase
+      .from("producto")
+      .select("*", { count: "exact" })
+      .eq("categoria_id", categoria)
+      .range(from, to));
+  }
 
   if (error) {
     throw new Error("DB: " + error.message);
@@ -26,7 +39,7 @@ export const getProductService = async (
     totalPages,
     totalElements,
     number: page,
-    size: size,
+    size,
     first: page === 0,
     last: page === totalPages - 1,
   };
