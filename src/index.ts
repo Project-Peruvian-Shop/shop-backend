@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import productRoute from "./routes/product.route";
+import categoryRoute from "./routes/category.route";
 
 dotenv.config();
 
@@ -19,7 +20,8 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/v1/products", productRoute);
+app.use("/api/v1/producto", productRoute);
+app.use("/api/v1/categoria", categoryRoute);
 
 // Vercel
 // export default app;
@@ -28,5 +30,5 @@ app.use("/api/v1/products", productRoute);
 const PORT = Number(process.env.PORT) || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-console.log(`Server running on port http://localhost:${process.env.PORT}`);
+  console.log(`Server running on port http://localhost:${process.env.PORT}`);
 });
