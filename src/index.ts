@@ -24,11 +24,11 @@ app.use("/api/v1/producto", productRoute);
 app.use("/api/v1/categoria", categoryRoute);
 
 // Vercel
-// export default app;
+export default app;
 
 // Local server
-const PORT = Number(process.env.PORT) || 5000;
+// const PORT = Number(process.env.PORT) || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port http://localhost:${process.env.PORT}`);
-});
+// app.listen(PORT, "0.0.0.0", () => {
+//   console.log(`Server running on port http://localhost:${process.env.PORT}`);
+// });
