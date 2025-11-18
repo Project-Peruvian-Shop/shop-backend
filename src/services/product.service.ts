@@ -1,5 +1,9 @@
 import { PaginatedResponse } from "../types/global.type";
-import { PaginatedProductoResponseDTO, Producto, ProductoPaginated } from "../types/product.type";
+import {
+  PaginatedProductoResponseDTO,
+  Producto,
+  ProductoPaginated,
+} from "../types/product.type";
 import { supabase } from "../utils/supabaseClient";
 
 type Imagen = { id: number; enlace: string; alt: string };
@@ -56,8 +60,8 @@ export const getProductService = async (
   const toOne = <T>(value: T | T[]): T =>
     Array.isArray(value) ? value[0] : value;
 
-  const content: PaginatedProductoResponseDTO[] =
-    (data ?? []).map((prod: any) => {
+  const content: PaginatedProductoResponseDTO[] = (data ?? []).map(
+    (prod: any) => {
       const imagen = toOne(prod.imagen);
       const categoria = toOne(prod.categoria);
 
@@ -68,7 +72,8 @@ export const getProductService = async (
         imagenAlt: imagen?.alt ?? "",
         categoriaNombre: categoria?.nombre ?? "",
       };
-    });
+    }
+  );
 
   return {
     content,
@@ -80,7 +85,6 @@ export const getProductService = async (
     last: page === totalPages - 1,
   };
 };
-
 
 export const getProductByIdService = async (
   id: number
@@ -126,10 +130,17 @@ export const getProductByIdService = async (
 export const getProductSuggestedService = async (
   producto: number = 1,
   categoria: number = 1
-): Promise<Producto[]> => {
+): Promise<PaginatedProductoResponseDTO[]> => {
   const { data, error } = await supabase
     .from("producto")
-    .select("*")
+    .select(
+      `
+        id,
+        nombre,
+        imagen:imagen_id ( id, enlace, alt ),
+        categoria:categoria_id ( id, nombre )
+      `
+    )
     .neq("id", producto)
     .eq("categoria_id", categoria)
     .limit(4);
@@ -138,5 +149,24 @@ export const getProductSuggestedService = async (
     throw new Error("DB: " + error.message);
   }
 
-  return data as Producto[];
+  // Normalizador (igual al otro service)
+  const toOne = <T>(value: T | T[]): T =>
+    Array.isArray(value) ? value[0] : value;
+
+  const suggested: PaginatedProductoResponseDTO[] = (data ?? []).map(
+    (prod: any) => {
+      const imagen = toOne(prod.imagen);
+      const categoriaObj = toOne(prod.categoria);
+
+      return {
+        id: prod.id,
+        nombre: prod.nombre,
+        imagenUrl: imagen?.enlace ?? "",
+        imagenAlt: imagen?.alt ?? "",
+        categoriaNombre: categoriaObj?.nombre ?? "",
+      };
+    }
+  );
+
+  return suggested;
 };
