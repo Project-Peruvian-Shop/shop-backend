@@ -3,6 +3,6 @@ import { getCategoryQuantityController } from "../controllers/category.controlle
 
 const categoryRoute = Router();
 
-categoryRoute.get("/all-quantity", getCategoryQuantityController);
+categoryRoute.get("/all-and-quantity", getCategoryQuantityController);
 
 export default categoryRoute;
