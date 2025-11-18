@@ -47,3 +47,21 @@ export const getProductByIdService = async (id: number): Promise<Producto> => {
 
   return data as Producto;
 };
+
+export const getProductSuggestedService = async (
+  producto: number = 1,
+  categoria: number = 1
+): Promise<Producto[]> => {
+  const { data, error } = await supabase
+    .from("producto")
+    .select("*")
+    .neq("id", producto)
+    .eq("categoria_id", categoria)
+    .limit(4);
+
+  if (error) {
+    throw new Error("DB: " + error.message);
+  }
+
+  return data as Producto[];
+};

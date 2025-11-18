@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   getProductByIdService,
   getProductService,
+  getProductSuggestedService,
 } from "../services/product.service";
 
 export const getProductController = async (req: Request, res: Response) => {
@@ -51,6 +52,34 @@ export const getProductByIdController = async (
     res.status(statusCode).json({
       ok: false,
       message: "Error fetching product",
+      data: null,
+      dateTime: new Date().toISOString(),
+      detail: error.message,
+    });
+  }
+};
+
+export const getProductSuggestedController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const producto = Number(req.query.producto) || 1;
+    const categoria = Number(req.query.categoria) || 1;
+
+    const products = await getProductSuggestedService(producto, categoria);
+
+    res.status(200).json({
+      ok: true,
+      message: "Suggested products fetched successfully",
+      data: products,
+      dateTime: new Date().toISOString(),
+      detail: `Returned suggested products for product ${producto} in category ${categoria}`,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      ok: false,
+      message: "Error fetching suggested products",
       data: null,
       dateTime: new Date().toISOString(),
       detail: error.message,
